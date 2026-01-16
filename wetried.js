@@ -2,16 +2,8 @@ async function searchResults(keyword) {
     try {
         const url = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
 
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                "accept": "application/json",
-                "x-requested-with": "XMLHttpRequest",
-                "user-agent": "Mozilla/5.0"
-            }
-        });
-
-        if (!response || !response.ok) return JSON.stringify([]);
+        const response = await soraFetchSafe(url);
+        if (!response) return JSON.stringify([]);
 
         const json = await response.json();
         if (!json?.data?.length) return JSON.stringify([]);
