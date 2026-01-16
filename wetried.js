@@ -43,6 +43,7 @@ async function extractDetails(url) {
             airdate: ''
         }]);
     }
+}
 async function extractChapters(url) {
     try {
         const slug = url.split('/series/')[1];
