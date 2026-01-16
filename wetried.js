@@ -1,32 +1,36 @@
 async function searchResults(keyword) {
     try {
-        const url = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
-
-        const res = await soraFetch(url, {
-            headers: {
-                "accept": "application/json",
-                "x-requested-with": "XMLHttpRequest"
+        const res = await soraFetch(
+            `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`,
+            {
+                headers: {
+                    "accept": "application/json",
+                    "x-requested-with": "XMLHttpRequest"
+                }
             }
-        });
+        );
 
         if (!res) return JSON.stringify([]);
 
         const json = await res.json();
-        if (!json?.data) return JSON.stringify([]);
+        if (!json?.data?.length) return JSON.stringify([]);
 
-        const results = json.data.map(item => ({
-            title: item.title,
-            image: item.thumbnail,
-            href: `https://wetriedtls.com/series/${item.series_slug}`
-        }));
+        const results = json.data
+            .filter(item => item.free_chapters && item.free_chapters.length > 0)
+            .map(item => ({
+                title: item.title,
+                image: item.thumbnail,
+                href: `https://wetriedtls.com/series/${item.series_slug}/${item.free_chapters[0].chapter_slug}`
+            }));
 
         return JSON.stringify(results);
 
     } catch (e) {
-        console.log("searchResults error:", e);
+        console.log("Wetried search error:", e);
         return JSON.stringify([]);
     }
 }
+
 
 async function extractDetails(url) {
     try {
