@@ -1,5 +1,39 @@
 console.log("WETRIED MODULE LOADED!");
 
+async function search(keyword) {
+    console.log("WETRIED search() called with keyword:", keyword);
+    
+    try {
+        const apiUrl = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
+        console.log("WETRIED: Calling API:", apiUrl);
+        
+        const response = await fetch(apiUrl);
+        const text = await response.text();
+        console.log("WETRIED: Response length:", text.length);
+        
+        const json = JSON.parse(text);
+        
+        if (!json || !json.data || !Array.isArray(json.data)) {
+            console.log("WETRIED: No data array");
+            return JSON.stringify([]);
+        }
+        
+        console.log("WETRIED: Found", json.data.length, "results");
+        
+        const results = json.data.map(item => ({
+            title: item.title || 'No title',
+            image: item.cover || '',
+            href: `https://wetriedtls.com/series/${item.series_slug}`
+        }));
+        
+        console.log("WETRIED: First result:", results[0]?.title);
+        return JSON.stringify(results);
+    } catch (e) {
+        console.log("WETRIED search ERROR:", e.toString());
+        return JSON.stringify([]);
+    }
+}
+
 async function searchResults(url) {
     console.log("WETRIED searchResults called with URL:", url);
     
