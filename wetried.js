@@ -1,22 +1,23 @@
 async function searchResults(keyword) {
     try {
-        const res = await soraFetch(
-            `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`,
-            {
-                headers: {
-                    "accept": "application/json",
-                    "x-requested-with": "XMLHttpRequest"
-                }
+        const url = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
+
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "accept": "application/json",
+                "x-requested-with": "XMLHttpRequest",
+                "user-agent": "Mozilla/5.0"
             }
-        );
+        });
 
-        if (!res) return JSON.stringify([]);
+        if (!response || !response.ok) return JSON.stringify([]);
 
-        const json = await res.json();
+        const json = await response.json();
         if (!json?.data?.length) return JSON.stringify([]);
 
         const results = json.data
-            .filter(item => item.free_chapters && item.free_chapters.length > 0)
+            .filter(item => item.free_chapters?.length)
             .map(item => ({
                 title: item.title,
                 image: item.thumbnail,
