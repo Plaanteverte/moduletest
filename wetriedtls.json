@@ -11,6 +11,6 @@
   "baseUrl": "https://wetriedtls.com",
   "scriptUrl": "https://raw.githubusercontent.com/Plaanteverte/moduletest/main/wetried.js",
   "type": "novels",
-  "asyncJS": true,
-  "novel": true
+  "novel": true,
+  "asyncJS": true
 }
