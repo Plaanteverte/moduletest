@@ -1,12 +1,26 @@
 async function searchResults(keyword) {
-    return JSON.stringify([
-        {
-            title: "TEST OK",
-            image: "https://wetriedtls.com/favicon.ico",
-            href: "https://wetriedtls.com"
+    try {
+        const url = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
+        const response = await soraFetch(url);
+        const json = await response.json();
+
+        if (!json?.data?.items) {
+            return JSON.stringify([]);
         }
-    ]);
+
+        const results = json.data.items.map(item => ({
+            title: item.title,
+            image: item.cover || "",
+            href: `https://wetriedtls.com/novel/${item.slug}`
+        }));
+
+        return JSON.stringify(results);
+    } catch (e) {
+        console.log("Wetried search error:", e);
+        return JSON.stringify([]);
+    }
 }
+
 
 async function extractDetails(url) {
     try {
