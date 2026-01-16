@@ -6,13 +6,13 @@
     "icon": "https://github.com/Plaanteverte.png",
     "url": "https://github.com/Plaanteverte"
   },
-  "version": "1.0.8",
+  "version": "1.0.9",
   "language": "English",
   "streamType": "novels",
   "quality": "N/A",
   "baseUrl": "https://wetriedtls.com",
-  "searchBaseUrl": "https://wetriedtls.com/query?adult=true&query_string=",
-  "scriptUrl": "https://raw.githubusercontent.com/Plaanteverte/moduletest/main/wetried.js?v=7",
+  "searchBaseUrl": "https://wetriedtls.com/novels?search=",
+  "scriptUrl": "https://raw.githubusercontent.com/Plaanteverte/moduletest/main/wetried.js",
   "type": "novels",
   "asyncJS": true,
   "novel": true
