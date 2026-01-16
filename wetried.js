@@ -1,6 +1,6 @@
 async function searchResults(keyword) {
     try {
-        const url = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}&page=1`;
+        const url = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
 
         const res = await soraFetch(url, {
             headers: {
@@ -15,8 +15,8 @@ async function searchResults(keyword) {
         if (!json?.data) return JSON.stringify([]);
 
         const results = json.data.map(item => ({
-            title: item.title ?? 'Unknown',
-            image: item.thumbnail ?? '',
+            title: item.title,
+            image: item.thumbnail,
             href: `https://wetriedtls.com/series/${item.series_slug}`
         }));
 
