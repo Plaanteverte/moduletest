@@ -12,7 +12,7 @@
   "quality": "N/A",
   "baseUrl": "https://wetriedtls.com",
   "searchBaseUrl": "https://wetriedtls.com/query?adult=true&query_string=",
-  "scriptUrl": "https://raw.githubusercontent.com/Plaanteverte/moduletest/main/wetried.js?v=4",
+  "scriptUrl": "https://raw.githubusercontent.com/Plaanteverte/moduletest/main/wetried.js",
   "type": "novels",
   "asyncJS": true,
   "novel": true
