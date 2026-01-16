@@ -1,12 +1,12 @@
 {
   "sourceName": "WeTriedTLS",
-  "iconUrl": "https://wetriedtls.com/favicon.ico",
+  "iconUrl": "https://wetriedtls.com/icon.png",
   "author": {
     "name": "Plaanteverte",
     "icon": "https://github.com/Plaanteverte.png",
     "url": "https://github.com/Plaanteverte"
   },
-  "version": "1.0.1",
+  "version": "1.0.2",
   "language": "English",
   "streamType": "novels",
   "quality": "N/A",
