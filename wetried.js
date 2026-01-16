@@ -4,14 +4,14 @@ async function searchResults(keyword) {
         const response = await soraFetch(url);
         const json = await response.json();
 
-        if (!json?.data?.items) {
+        if (!Array.isArray(json?.data)) {
             return JSON.stringify([]);
         }
 
-        const results = json.data.items.map(item => ({
+        const results = json.data.map(item => ({
             title: item.title,
-            image: item.cover || "",
-            href: `https://wetriedtls.com/novel/${item.slug}`
+            image: item.cover ?? "",
+            href: `https://wetriedtls.com/series/${item.series_slug}`
         }));
 
         return JSON.stringify(results);
@@ -43,68 +43,51 @@ async function extractDetails(url) {
             airdate: ''
         }]);
     }
-}
 async function extractChapters(url) {
     try {
         const slug = url.split('/series/')[1];
-        const res = await soraFetch(
-            `https://wetriedtls.com/query?adult=true&query_string=${slug}`
-        );
-        const json = await res.json();
+        if (!slug) return JSON.stringify([]);
 
-        const series = json.data.find(s => s.series_slug === slug);
-        if (!series) return JSON.stringify([]);
+        const apiUrl = `https://wetriedtls.com/series/${slug}`;
+        const res = await soraFetch(apiUrl);
+        const html = await res.text();
 
-        const chapters = [];
+        // les données sont injectées en JS
+        const dataMatch = html.match(/__NEXT_DATA__\s*=\s*({[\s\S]*?});/);
+        if (!dataMatch) return JSON.stringify([]);
 
-        const pushChapter = (ch, i) => {
-            chapters.push({
-                href: `https://wetriedtls.com/series/${slug}/${ch.chapter_slug}`,
-                number: Number(ch.index ?? i + 1),
-                title: ch.chapter_name
-            });
-        };
+        const data = JSON.parse(dataMatch[1]);
+        const chaptersData =
+            data?.props?.pageProps?.series?.chapters ?? [];
 
-        series.free_chapters?.forEach(pushChapter);
-        series.paid_chapters?.forEach(pushChapter);
-
-        // ordre croissant
-        chapters.sort((a, b) => a.number - b.number);
+        const chapters = chaptersData.map((ch, i) => ({
+            href: `https://wetriedtls.com/series/${slug}/${ch.slug}`,
+            number: i + 1,
+            title: ch.title
+        }));
 
         return JSON.stringify(chapters);
     } catch (e) {
-        console.log('extractChapters error:', e);
+        console.log("extractChapters error:", e);
         return JSON.stringify([]);
     }
 }
+
 async function extractText(url) {
     try {
-        // tentative API directe
-        const apiUrl = url.replace('/series/', '/api/chapters/');
-        let res = await soraFetch(apiUrl);
-
-        let data;
-        if (res && res.headers?.get('content-type')?.includes('json')) {
-            data = await res.json();
-            if (data?.content) {
-                return cleanText(data.content);
-            }
-        }
-
-        // fallback HTML
-        res = await soraFetch(url);
+        const res = await soraFetch(url);
         const html = await res.text();
 
         const match = html.match(/<div class="chapter-content">([\s\S]*?)<\/div>/i);
         if (!match) return '';
 
         return cleanText(match[1]);
-
     } catch (e) {
         console.log('extractText error:', e);
         return '';
     }
 }
+
 
 function cleanText(html) {
     return html
