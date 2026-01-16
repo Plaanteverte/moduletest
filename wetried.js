@@ -1,17 +1,14 @@
 console.log("WETRIED MODULE LOADED!");
 
-async function search(keyword) {
-    console.log("WETRIED SEARCH CALLED WITH:", keyword);
+async function searchResults(url) {
+    console.log("WETRIED searchResults:", url);
     
     try {
-        const url = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
-        
         const response = await fetch(url);
-        const text = await response.text();
-        const json = JSON.parse(text);
+        const json = await response.json();
         
         if (!json || !json.data || !Array.isArray(json.data)) {
-            console.log("WETRIED: No valid data");
+            console.log("WETRIED: No data in search");
             return JSON.stringify([]);
         }
         
@@ -25,7 +22,7 @@ async function search(keyword) {
         
         return JSON.stringify(results);
     } catch (e) {
-        console.log("WETRIED ERROR:", e.toString());
+        console.log("WETRIED searchResults ERROR:", e.toString());
         return JSON.stringify([]);
     }
 }
@@ -54,6 +51,8 @@ async function extractDetails(url) {
             description = descMatch ? descMatch[1] : '';
         }
         
+        console.log("WETRIED: Description length:", description.length);
+        
         return JSON.stringify([{
             description: description,
             aliases: '',
@@ -71,6 +70,7 @@ async function extractChapters(url) {
     try {
         const slug = url.split('/series/')[1];
         if (!slug) {
+            console.log("WETRIED: No slug");
             return JSON.stringify([]);
         }
         
@@ -80,7 +80,7 @@ async function extractChapters(url) {
         const dataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>(.*?)<\/script>/s);
         
         if (!dataMatch) {
-            console.log("WETRIED: No __NEXT_DATA__ found");
+            console.log("WETRIED: No __NEXT_DATA__");
             return JSON.stringify([]);
         }
         
@@ -128,7 +128,7 @@ async function extractText(url) {
             }
         }
         
-        console.log("WETRIED: No content found");
+        console.log("WETRIED: No content");
         return '';
     } catch (e) {
         console.log("WETRIED extractText ERROR:", e.toString());
