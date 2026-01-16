@@ -8,8 +8,6 @@
   },
   "version": "1.0.1",
   "language": "English",
-  "streamType": "novels",
-  "quality": "N/A",
   "baseUrl": "https://wetriedtls.com",
   "scriptUrl": "https://raw.githubusercontent.com/Plaanteverte/moduletest/main/wetried.js",
   "type": "novels",
