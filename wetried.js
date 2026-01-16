@@ -1,23 +1,33 @@
 async function searchResults(keyword) {
     try {
-        const url =
-          `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}&page=1`;
+        const url = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}&page=1`;
 
-        const res = await soraFetch(url);
+        const res = await soraFetch(url, {
+            headers: {
+                "accept": "application/json",
+                "x-requested-with": "XMLHttpRequest"
+            }
+        });
+
+        if (!res) return JSON.stringify([]);
+
         const json = await res.json();
+        if (!json?.data) return JSON.stringify([]);
 
         const results = json.data.map(item => ({
-            title: item.title,
+            title: item.title ?? 'Unknown',
             image: item.thumbnail ?? '',
             href: `https://wetriedtls.com/series/${item.series_slug}`
         }));
 
         return JSON.stringify(results);
+
     } catch (e) {
-        console.log('searchResults error:', e);
+        console.log("searchResults error:", e);
         return JSON.stringify([]);
     }
 }
+
 async function extractDetails(url) {
     try {
         const res = await soraFetch(url);
