@@ -1,3 +1,8 @@
+// Fonction principale pour la recherche (appelée par Sora)
+async function search(keyword) {
+    return await searchResults(keyword);
+}
+
 async function searchResults(keyword) {
     try {
         console.log("Wetried: Starting search for:", keyword);
