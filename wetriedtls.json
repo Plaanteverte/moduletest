@@ -1,17 +1,18 @@
 {
   "sourceName": "WeTriedTLS",
-  "iconUrl": "https://wetriedtls.com/icon.png",
+  "iconUrl": "https://wetriedtls.com/wetried_only.png",
   "author": {
     "name": "Plaanteverte",
     "icon": "https://github.com/Plaanteverte.png",
     "url": "https://github.com/Plaanteverte"
   },
-  "version": "1.0.3",
+  "version": "1.0.4",
   "language": "English",
   "streamType": "novels",
   "quality": "N/A",
   "baseUrl": "https://wetriedtls.com",
-  "scriptUrl": "https://raw.githubusercontent.com/Plaanteverte/moduletest/main/wetried.js",
+  "searchBaseUrl": "https://wetriedtls.com/query?adult=true&query_string=",
+  "scriptUrl": "https://raw.githubusercontent.com/Plaanteverte/moduletest/main/wetried.js?v=4",
   "type": "novels",
   "asyncJS": true,
   "novel": true
