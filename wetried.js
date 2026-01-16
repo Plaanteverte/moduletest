@@ -38,29 +38,28 @@ async function searchResults(keyword) {
     console.log("WETRIED searchResults called with keyword:", keyword);
     
     try {
-        if (!keyword) {
-            console. log("WETRIED: No keyword provided");
+        if (! keyword) {
+            console.log("WETRIED: No keyword provided");
             return JSON.stringify([]);
         }
         
-        console.log("WETRIED: Search keyword:", keyword);
+        console.log("WETRIED:  Search keyword:", keyword);
         
-        // Call the API directly
         const apiUrl = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
         console.log("WETRIED: Calling API:", apiUrl);
         
-        const response = await fetch(apiUrl);
+        const response = await soraFetch(apiUrl);  // <-- Use soraFetch instead
         const text = await response.text();
         console.log("WETRIED: Response received, length:", text.length);
         
         const json = JSON.parse(text);
         
-        if (!json || !json.data || !Array. isArray(json.data)) {
+        if (!json || !json.data || !Array.isArray(json.data)) {
             console.log("WETRIED: No data array in response");
             return JSON.stringify([]);
         }
         
-        console.log("WETRIED: Found", json.data.length, "results");
+        console.log("WETRIED:  Found", json.data.length, "results");
         
         const results = json.data.map(item => ({
             title:  item.title || 'No title',
@@ -74,6 +73,17 @@ async function searchResults(keyword) {
         console.log("WETRIED searchResults ERROR:", e.toString());
         console.log("WETRIED error stack:", e.stack);
         return JSON.stringify([]);
+    }
+}
+async function soraFetch(url, options = { headers: {}, method: 'GET', body: null }) {
+    try {
+        return await fetchv2(url, options. headers ??  {}, options.method ??  'GET', options.body ??  null);
+    } catch(e) {
+        try {
+            return await fetch(url, options);
+        } catch(error) {
+            return null;
+        }
     }
 }
 
