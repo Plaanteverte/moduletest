@@ -34,27 +34,32 @@ async function search(keyword) {
     }
 }
 
-async function searchResults(url) {
-    console.log("WETRIED searchResults called with URL:", url);
+async function searchResults(url, keyword) {
+    console.log("WETRIED searchResults called with URL:", url, "keyword:", keyword);
     
     try {
-        // Extraire le terme de recherche depuis l'URL (supporte ?s= et ?search=)
-        let searchMatch = url.match(/[?&]s=([^&]+)/);
-        if (!searchMatch) {
-            searchMatch = url.match(/[?&]search=([^&]+)/);
+        let searchKeyword = keyword; // Use keyword parameter directly
+        
+        // If keyword not provided, try to extract from URL
+        if (!searchKeyword && url) {
+            let searchMatch = url.match(/[?&]s=([^&]+)/);
+            if (!searchMatch) {
+                searchMatch = url.match(/[?&]search=([^&]+)/);
+            }
+            if (searchMatch) {
+                searchKeyword = decodeURIComponent(searchMatch[1]);
+            }
         }
         
-        if (!searchMatch) {
-            console.log("WETRIED: No search term in URL");
+        if (! searchKeyword) {
+            console.log("WETRIED: No search term found");
             return JSON.stringify([]);
         }
         
-        const keyword = decodeURIComponent(searchMatch[1]);
-        console.log("WETRIED: Search keyword:", keyword);
+        console.log("WETRIED: Search keyword:", searchKeyword);
         
-        // Appeler l'API directement
-        const apiUrl = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
-        console.log("WETRIED: Calling API:", apiUrl);
+        const apiUrl = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(searchKeyword)}`;
+        console.log("WETRIED:  Calling API:", apiUrl);
         
         const response = await fetch(apiUrl);
         const text = await response.text();
@@ -62,14 +67,14 @@ async function searchResults(url) {
         
         const json = JSON.parse(text);
         
-        if (!json || !json.data || !Array.isArray(json.data)) {
+        if (! json || !json.data || !Array.isArray(json.data)) {
             console.log("WETRIED: No data array in response");
-            return JSON.stringify([]);
+            return JSON. stringify([]);
         }
         
         console.log("WETRIED: Found", json.data.length, "results");
         
-        const results = json.data.map(item => ({
+        const results = json.data. map(item => ({
             title: item.title || 'No title',
             image: item.cover || '',
             href: `https://wetriedtls.com/series/${item.series_slug}`
