@@ -1,130 +1,99 @@
-// Fonction principale pour la recherche (appelée par Sora)
+console.log("WETRIED MODULE LOADED!");
+
 async function search(keyword) {
-    return await searchResults(keyword);
-}
-
-async function searchResults(keyword) {
+    console.log("WETRIED SEARCH CALLED WITH:", keyword);
+    
     try {
-        console.log("Wetried: Starting search for:", keyword);
-        
         const url = `https://wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
-        console.log("Wetried: Fetching URL:", url);
         
-        const response = await soraFetch(url);
-        console.log("Wetried: Response received, status:", response.status);
-        
+        const response = await fetch(url);
         const text = await response.text();
-        console.log("Wetried: Response text length:", text.length);
-        
         const json = JSON.parse(text);
-        console.log("Wetried: Parsed JSON, data array length:", json?.data?.length);
-
+        
         if (!json || !json.data || !Array.isArray(json.data)) {
-            console.log("Wetried: Invalid response structure");
+            console.log("WETRIED: No valid data");
             return JSON.stringify([]);
         }
-
-        const results = json.data.map(item => {
-            const result = {
-                title: item.title || 'No title',
-                image: item.cover || '',
-                href: `https://wetriedtls.com/series/${item.series_slug}`
-            };
-            console.log("Wetried: Mapped result:", result.title);
-            return result;
-        });
-
-        console.log("Wetried: Returning", results.length, "results");
+        
+        console.log("WETRIED: Found", json.data.length, "results");
+        
+        const results = json.data.map(item => ({
+            title: item.title || '',
+            image: item.cover || '',
+            href: `https://wetriedtls.com/series/${item.series_slug}`
+        }));
+        
         return JSON.stringify(results);
     } catch (e) {
-        console.log("Wetried search error:", e.message || e);
-        console.log("Wetried error stack:", e.stack);
+        console.log("WETRIED ERROR:", e.toString());
         return JSON.stringify([]);
     }
 }
 
 async function extractDetails(url) {
+    console.log("WETRIED extractDetails:", url);
+    
     try {
-        console.log("Wetried: Extracting details from:", url);
-        
-        const res = await soraFetch(url);
+        const res = await fetch(url);
         const html = await res.text();
-
+        
         const dataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>(.*?)<\/script>/s);
         
         let description = '';
-        let aliases = '';
-        let airdate = '';
-
+        
         if (dataMatch) {
-            try {
-                const data = JSON.parse(dataMatch[1]);
-                const seriesData = data?.props?.pageProps?.series;
-                
-                if (seriesData) {
-                    description = seriesData.description || '';
-                    aliases = seriesData.alt_titles?.join(', ') || '';
-                    airdate = seriesData.release_year || '';
-                    console.log("Wetried: Details extracted from __NEXT_DATA__");
-                }
-            } catch (parseError) {
-                console.log("Wetried: Error parsing NEXT_DATA:", parseError.message);
+            const data = JSON.parse(dataMatch[1]);
+            const seriesData = data?.props?.pageProps?.series;
+            if (seriesData) {
+                description = seriesData.description || '';
             }
         }
-
+        
         if (!description) {
             const descMatch = html.match(/<meta name="description" content="([^"]+)"/i);
             description = descMatch ? descMatch[1] : '';
-            console.log("Wetried: Used meta description fallback");
         }
-
+        
         return JSON.stringify([{
-            description,
-            aliases,
-            airdate
-        }]);
-    } catch (e) {
-        console.log("Wetried extractDetails error:", e.message);
-        return JSON.stringify([{
-            description: '',
+            description: description,
             aliases: '',
             airdate: ''
         }]);
+    } catch (e) {
+        console.log("WETRIED extractDetails ERROR:", e.toString());
+        return JSON.stringify([{ description: '', aliases: '', airdate: '' }]);
     }
 }
 
 async function extractChapters(url) {
+    console.log("WETRIED extractChapters:", url);
+    
     try {
-        console.log("Wetried: Extracting chapters from:", url);
-        
         const slug = url.split('/series/')[1];
         if (!slug) {
-            console.log("Wetried: Invalid URL format, no slug found");
             return JSON.stringify([]);
         }
-
-        console.log("Wetried: Extracted slug:", slug);
-
-        const res = await soraFetch(url);
+        
+        const res = await fetch(url);
         const html = await res.text();
-
+        
         const dataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>(.*?)<\/script>/s);
         
         if (!dataMatch) {
-            console.log("Wetried: __NEXT_DATA__ not found in HTML");
+            console.log("WETRIED: No __NEXT_DATA__ found");
             return JSON.stringify([]);
         }
-
+        
         const data = JSON.parse(dataMatch[1]);
         const chaptersData = data?.props?.pageProps?.series?.chapters;
-
+        
         if (!Array.isArray(chaptersData)) {
-            console.log("Wetried: No chapters array found in data");
+            console.log("WETRIED: No chapters array");
             return JSON.stringify([]);
         }
-
-        console.log("Wetried: Found", chaptersData.length, "chapters");
-
+        
+        console.log("WETRIED: Found", chaptersData.length, "chapters");
+        
         const chapters = chaptersData
             .sort((a, b) => (a.index || 0) - (b.index || 0))
             .map((ch, i) => ({
@@ -132,59 +101,37 @@ async function extractChapters(url) {
                 number: ch.index || (i + 1),
                 title: ch.title || `Chapter ${ch.index || (i + 1)}`
             }));
-
+        
         return JSON.stringify(chapters);
     } catch (e) {
-        console.log("Wetried extractChapters error:", e.message);
-        console.log("Wetried error stack:", e.stack);
+        console.log("WETRIED extractChapters ERROR:", e.toString());
         return JSON.stringify([]);
     }
 }
 
 async function extractText(url) {
+    console.log("WETRIED extractText:", url);
+    
     try {
-        console.log("Wetried: Extracting text from:", url);
-        
-        const res = await soraFetch(url);
+        const res = await fetch(url);
         const html = await res.text();
-
+        
         const dataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>(.*?)<\/script>/s);
         
         if (dataMatch) {
-            try {
-                const data = JSON.parse(dataMatch[1]);
-                const chapterData = data?.props?.pageProps?.chapter;
-                
-                if (chapterData?.content) {
-                    console.log("Wetried: Content found in __NEXT_DATA__");
-                    return cleanText(chapterData.content);
-                }
-            } catch (parseError) {
-                console.log("Wetried: Error parsing chapter data:", parseError.message);
+            const data = JSON.parse(dataMatch[1]);
+            const chapterData = data?.props?.pageProps?.chapter;
+            
+            if (chapterData?.content) {
+                console.log("WETRIED: Content found");
+                return cleanText(chapterData.content);
             }
         }
-
-        console.log("Wetried: Trying HTML content patterns");
         
-        const contentPatterns = [
-            /<div[^>]*class="[^"]*chapter-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
-            /<div[^>]*id="chapter-content"[^>]*>([\s\S]*?)<\/div>/i,
-            /<article[^>]*>([\s\S]*?)<\/article>/i,
-            /<main[^>]*>([\s\S]*?)<\/main>/i
-        ];
-
-        for (const pattern of contentPatterns) {
-            const match = html.match(pattern);
-            if (match) {
-                console.log("Wetried: Content found with pattern");
-                return cleanText(match[1]);
-            }
-        }
-
-        console.log("Wetried: No content found");
+        console.log("WETRIED: No content found");
         return '';
     } catch (e) {
-        console.log('Wetried extractText error:', e.message);
+        console.log("WETRIED extractText ERROR:", e.toString());
         return '';
     }
 }
@@ -202,13 +149,4 @@ function cleanText(html) {
         .replace(/&#39;/g, "'")
         .replace(/\n{3,}/g, '\n\n')
         .trim();
-}
-
-async function soraFetch(url, options = { headers: {}, method: 'GET', body: null }) {
-    try {
-        return await fetchv2(url, options.headers ?? {}, options.method ?? 'GET', options.body ?? null);
-    } catch(e) {
-        console.log("Wetried: fetchv2 failed, trying regular fetch");
-        return await fetch(url, options);
-    }
 }
