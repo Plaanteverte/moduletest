@@ -1,30 +1,46 @@
 console.log("WETRIED MODULE LOADED!");
 
 async function searchResults(keyword) {
-    console.log("WETRIED searchResults() called with keyword:", keyword);
-    console.log("WETRIED keyword type:", typeof keyword);
-    console.log("WETRIED keyword length:", keyword ? keyword.length : 0);
-    
-    // Si le keyword est vide, retourner vide
-    if (!keyword || keyword.trim() === '') {
-        console.log("WETRIED: Empty keyword, returning empty array");
-        return JSON.stringify([]);
-    }
+    console.log("WETRIED searchResults() called");
+    console.log("WETRIED param received:", keyword);
+    console.log("WETRIED param type:", typeof keyword);
     
     try {
-        const apiUrl = `https://api.wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
+        // Le keyword peut être vide, l'URL complète, ou juste le terme
+        let searchTerm = keyword;
+        
+        // Si c'est une URL, extraire le terme
+        if (keyword && keyword.includes('?')) {
+            const urlMatch = keyword.match(/[?&](?:keyword|s|search|query_string)=([^&]+)/);
+            if (urlMatch) {
+                searchTerm = decodeURIComponent(urlMatch[1]);
+                console.log("WETRIED: Extracted term from URL:", searchTerm);
+            }
+        }
+        
+        // Si toujours vide, on ne peut rien faire
+        if (!searchTerm || searchTerm.trim() === '') {
+            console.log("WETRIED: No search term found");
+            return JSON.stringify([]);
+        }
+        
+        console.log("WETRIED: Using search term:", searchTerm);
+        
+        // Appeler l'API
+        const apiUrl = `https://api.wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(searchTerm)}`;
         console.log("WETRIED: Calling API:", apiUrl);
         
-        const response = await fetch(apiUrl);
-        console.log("WETRIED: Response status:", response.status);
+        const response = await soraFetch(apiUrl);
+        console.log("WETRIED: Response received");
         
         const text = await response.text();
-        console.log("WETRIED: Response length:", text.length);
+        console.log("WETRIED: Text length:", text.length);
         
         const json = JSON.parse(text);
+        console.log("WETRIED: JSON parsed");
         
         if (!json || !json.data || !Array.isArray(json.data)) {
-            console.log("WETRIED: No data array");
+            console.log("WETRIED: Invalid JSON structure");
             return JSON.stringify([]);
         }
         
@@ -43,8 +59,8 @@ async function searchResults(keyword) {
         console.log(JSON.stringify(results));
         return JSON.stringify(results);
     } catch (e) {
-        console.log("WETRIED searchResults ERROR:", e.toString());
-        console.log("WETRIED error message:", e.message);
+        console.log("WETRIED ERROR:", e.toString());
+        console.log("WETRIED stack:", e.stack);
         return JSON.stringify([]);
     }
 }
@@ -171,4 +187,18 @@ function cleanText(html) {
         .replace(/&#39;/g, "'")
         .replace(/\n{3,}/g, '\n\n')
         .trim();
+}
+
+async function soraFetch(url, options = { headers: {}, method: 'GET', body: null }) {
+    try {
+        return await fetchv2(url, options.headers ?? {}, options.method ?? 'GET', options.body ?? null);
+    } catch (e) {
+        console.log("WETRIED: fetchv2 failed, using fetch");
+        try {
+            return await fetch(url, options);
+        } catch (error) {
+            console.log("WETRIED: fetch also failed:", error);
+            return null;
+        }
+    }
 }
