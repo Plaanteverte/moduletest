@@ -220,27 +220,50 @@ async function extractText(url) {
     console.log("WETRIED extractText URL:", url);
     
     try {
-        const res = await soraFetch(url);
+        // Extraire le slug de la série et le slug du chapitre depuis l'URL
+        // Format: https://wetriedtls.com/series/{series_slug}/{chapter_slug}
+        const parts = url.split('/series/')[1];
+        if (!parts) {
+            console.log("WETRIED: Invalid URL format");
+            return '';
+        }
+        
+        const [seriesSlug, chapterSlug] = parts.split('/');
+        if (!seriesSlug || !chapterSlug) {
+            console.log("WETRIED: Missing series or chapter slug");
+            return '';
+        }
+        
+        console.log("WETRIED: Series slug:", seriesSlug);
+        console.log("WETRIED: Chapter slug:", chapterSlug);
+        
+        // Appeler l'API pour obtenir le contenu du chapitre
+        const apiUrl = `https://api.wetriedtls.com/series/${seriesSlug}/${chapterSlug}`;
+        console.log("WETRIED: Calling API:", apiUrl);
+        
+        const res = await soraFetch(apiUrl);
         if (!res) {
             console.log("WETRIED: No response");
             return '';
         }
         
-        const html = await res.text();
-        console.log("WETRIED: HTML received, length:", html.length);
+        const json = await res.json();
+        console.log("WETRIED: API response received");
         
-        // Chercher le contenu dans la div #reader-container
-        const contentMatch = html.match(/<div[^>]*id="reader-container"[^>]*>([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/i);
+        const content = json.chapter?.chapter_content || '';
         
-        if (contentMatch) {
-            console.log("WETRIED: Content found in reader-container");
-            const content = cleanText(contentMatch[1]);
-            console.log("WETRIED: Content length:", content.length);
-            return content;
+        if (!content) {
+            console.log("WETRIED: No content in response");
+            return '';
         }
         
-        console.log("WETRIED: No content found");
-        return '';
+        console.log("WETRIED: Content found, length:", content.length);
+        
+        // Nettoyer le HTML
+        const cleanedContent = cleanText(content);
+        console.log("WETRIED: Cleaned content length:", cleanedContent.length);
+        
+        return cleanedContent;
     } catch (e) {
         console.log("WETRIED extractText ERROR:", e.toString());
         return '';
