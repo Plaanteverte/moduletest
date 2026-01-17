@@ -1,3 +1,4 @@
+console.log("WETRIED MODULE LOADED!");
 
 async function searchResults(keyword) {
     console.log("WETRIED searchResults() called");
