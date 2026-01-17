@@ -81,8 +81,8 @@ async function extractDetails(url) {
             return JSON.stringify([{ description: '', aliases: '', airdate: '' }]);
         }
         
-        // Extraire le slug de la série
-        const slug = url.split('/series/')[1];
+        // Extraire le slug de la série (sans le paramètre ?id=)
+        const slug = url.split('/series/')[1]?.split('?')[0];
         if (!slug) {
             console.log("WETRIED: No slug in URL");
             return JSON.stringify([{ description: '', aliases: '', airdate: '' }]);
@@ -127,48 +127,55 @@ async function extractChapters(url) {
             return JSON.stringify([]);
         }
         
-        // Extraire le slug de la série
-        const slug = url.split('/series/')[1];
-        if (!slug) {
-            console.log("WETRIED: No slug found");
-            return JSON.stringify([]);
+        // Extraire le series_id depuis l'URL (format: /series/slug?id=123)
+        let seriesId = null;
+        const idMatch = url.match(/[?&]id=(\d+)/);
+        
+        if (idMatch) {
+            seriesId = idMatch[1];
+            console.log("WETRIED: Series ID from URL:", seriesId);
+        } else {
+            // Fallback: appeler l'API series si l'ID n'est pas dans l'URL
+            const slug = url.split('/series/')[1]?.split('?')[0];
+            if (!slug) {
+                console.log("WETRIED: No slug found");
+                return JSON.stringify([]);
+            }
+            
+            console.log("WETRIED: Series slug:", slug);
+            const seriesApiUrl = `https://api.wetriedtls.com/series/${slug}`;
+            console.log("WETRIED: Getting series ID from:", seriesApiUrl);
+            
+            const seriesRes = await soraFetch(seriesApiUrl);
+            if (!seriesRes) {
+                console.log("WETRIED: No series response");
+                return JSON.stringify([]);
+            }
+            
+            const seriesData = await seriesRes.json();
+            seriesId = seriesData.id;
+            
+            if (!seriesId) {
+                console.log("WETRIED: No series ID found");
+                return JSON.stringify([]);
+            }
+            
+            console.log("WETRIED: Series ID from API:", seriesId);
         }
         
-        console.log("WETRIED: Series slug:", slug);
-        
-        // D'abord, obtenir le series_id en appelant l'API series
-        const seriesApiUrl = `https://api.wetriedtls.com/series/${slug}`;
-        console.log("WETRIED: Getting series ID from:", seriesApiUrl);
-        
-        const seriesRes = await soraFetch(seriesApiUrl);
-        if (!seriesRes) {
-            console.log("WETRIED: No series response");
-            return JSON.stringify([]);
-        }
-        
-        const seriesData = await seriesRes.json();
-        const seriesId = seriesData.id;
-        
-        if (!seriesId) {
-            console.log("WETRIED: No series ID found");
-            return JSON.stringify([]);
-        }
-        
-        console.log("WETRIED: Series ID:", seriesId);
-        
-        // Maintenant, charger tous les chapitres
+        // Charger tous les chapitres
+        const slug = url.split('/series/')[1]?.split('?')[0];
         const allChapters = [];
         let currentPage = 1;
         let totalPages = 1;
         
-        // Charger la première page pour connaître le nombre total de pages
         do {
             const chaptersApiUrl = `https://api.wetriedtls.com/chapters/${seriesId}?page=${currentPage}&perPage=30&query=&order=asc`;
-            console.log("WETRIED: Loading page", currentPage, "from:", chaptersApiUrl);
+            console.log("WETRIED: Loading page", currentPage);
             
             const chaptersRes = await soraFetch(chaptersApiUrl);
             if (!chaptersRes) {
-                console.log("WETRIED: No chapters response for page", currentPage);
+                console.log("WETRIED: No response for page", currentPage);
                 break;
             }
             
@@ -181,7 +188,6 @@ async function extractChapters(url) {
             
             if (Array.isArray(chaptersJson.data)) {
                 allChapters.push(...chaptersJson.data);
-                console.log("WETRIED: Loaded", chaptersJson.data.length, "chapters from page", currentPage);
             }
             
             currentPage++;
@@ -189,7 +195,6 @@ async function extractChapters(url) {
         
         console.log("WETRIED: Total chapters loaded:", allChapters.length);
         
-        // Transformer en format Sora
         const chapters = allChapters.map((ch, i) => ({
             href: `https://wetriedtls.com/series/${slug}/${ch.chapter_slug}`,
             number: parseFloat(ch.index) || (i + 1),
@@ -204,7 +209,6 @@ async function extractChapters(url) {
         return JSON.stringify(chapters);
     } catch (e) {
         console.log("WETRIED extractChapters ERROR:", e.toString());
-        console.log("WETRIED error stack:", e.stack);
         return JSON.stringify([]);
     }
 }
