@@ -1,10 +1,9 @@
 console.log("WETRIED MODULE LOADED!");
 
-async function search(keyword) {
-    console.log("WETRIED search() called with keyword:", keyword);
+async function searchResults(keyword) {
+    console.log("WETRIED searchResults() called with keyword:", keyword);
     
     try {
-        // IMPORTANT: Utiliser api.wetriedtls.com et non wetriedtls.com
         const apiUrl = `https://api.wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
         console.log("WETRIED: Calling API:", apiUrl);
         
@@ -28,60 +27,10 @@ async function search(keyword) {
         }));
         
         console.log("WETRIED: First result:", results[0]?.title);
-        return JSON.stringify(results);
-    } catch (e) {
-        console.log("WETRIED search ERROR:", e.toString());
-        return JSON.stringify([]);
-    }
-}
-
-
-async function searchResults(url) {
-    console.log("WETRIED searchResults called with URL:", url);
-    
-    try {
-        // Extraire le terme de recherche depuis l'URL
-        let searchMatch = url.match(/[?&]s=([^&]+)/);
-        if (!searchMatch) {
-            searchMatch = url.match(/[?&]search=([^&]+)/);
-        }
-        
-        if (!searchMatch) {
-            console.log("WETRIED: No search term in URL");
-            return JSON.stringify([]);
-        }
-        
-        const keyword = decodeURIComponent(searchMatch[1]);
-        console.log("WETRIED: Search keyword:", keyword);
-        
-        // Utiliser api.wetriedtls.com
-        const apiUrl = `https://api.wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
-        console.log("WETRIED: Calling API:", apiUrl);
-        
-        const response = await fetch(apiUrl);
-        const text = await response.text();
-        console.log("WETRIED: Response received, length:", text.length);
-        
-        const json = JSON.parse(text);
-        
-        if (!json || !json.data || !Array.isArray(json.data)) {
-            console.log("WETRIED: No data array in response");
-            return JSON.stringify([]);
-        }
-        
-        console.log("WETRIED: Found", json.data.length, "results");
-        
-        const results = json.data.map(item => ({
-            title: item.title || 'No title',
-            image: item.thumbnail || item.cover || '',
-            href: `https://wetriedtls.com/series/${item.series_slug}`
-        }));
-        
-        console.log("WETRIED: First result:", results[0]?.title);
+        console.log(JSON.stringify(results));
         return JSON.stringify(results);
     } catch (e) {
         console.log("WETRIED searchResults ERROR:", e.toString());
-        console.log("WETRIED error stack:", e.stack);
         return JSON.stringify([]);
     }
 }
