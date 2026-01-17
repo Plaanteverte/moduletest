@@ -2,12 +2,22 @@ console.log("WETRIED MODULE LOADED!");
 
 async function searchResults(keyword) {
     console.log("WETRIED searchResults() called with keyword:", keyword);
+    console.log("WETRIED keyword type:", typeof keyword);
+    console.log("WETRIED keyword length:", keyword ? keyword.length : 0);
+    
+    // Si le keyword est vide, retourner vide
+    if (!keyword || keyword.trim() === '') {
+        console.log("WETRIED: Empty keyword, returning empty array");
+        return JSON.stringify([]);
+    }
     
     try {
         const apiUrl = `https://api.wetriedtls.com/query?adult=true&query_string=${encodeURIComponent(keyword)}`;
         console.log("WETRIED: Calling API:", apiUrl);
         
         const response = await fetch(apiUrl);
+        console.log("WETRIED: Response status:", response.status);
+        
         const text = await response.text();
         console.log("WETRIED: Response length:", text.length);
         
@@ -26,11 +36,15 @@ async function searchResults(keyword) {
             href: `https://wetriedtls.com/series/${item.series_slug}`
         }));
         
-        console.log("WETRIED: First result:", results[0]?.title);
+        if (results.length > 0) {
+            console.log("WETRIED: First result:", results[0].title);
+        }
+        
         console.log(JSON.stringify(results));
         return JSON.stringify(results);
     } catch (e) {
         console.log("WETRIED searchResults ERROR:", e.toString());
+        console.log("WETRIED error message:", e.message);
         return JSON.stringify([]);
     }
 }
