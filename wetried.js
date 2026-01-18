@@ -215,13 +215,49 @@ async function extractChapters(url) {
     }
 }
 
-async function extractText(url) {
+async function extractText(...args) {
     console.log("WETRIED extractText called");
-    console.log("WETRIED extractText URL:", url);
+    console.log("WETRIED arguments count:", args.length);
+    
+    // Logger tous les arguments pour voir ce que Sora envoie
+    for (let i = 0; i < args.length; i++) {
+        console.log(`WETRIED extractText arg[${i}]:`, args[i]);
+        console.log(`WETRIED extractText arg[${i}] type:`, typeof args[i]);
+    }
+    
+    // Essayer de trouver l'URL dans n'importe quel argument
+    let url = null;
+    for (let i = 0; i < args.length; i++) {
+        if (args[i] && typeof args[i] === 'string' && args[i].includes('wetriedtls.com')) {
+            url = args[i];
+            console.log("WETRIED: Found URL in arg", i, ":", url);
+            break;
+        }
+    }
+    
+    // Si toujours pas d'URL, vérifier si c'est un objet avec une propriété url
+    if (!url) {
+        for (let i = 0; i < args.length; i++) {
+            if (args[i] && typeof args[i] === 'object') {
+                console.log("WETRIED: arg", i, "is object, keys:", Object.keys(args[i]));
+                if (args[i].url || args[i].href || args[i].link) {
+                    url = args[i].url || args[i].href || args[i].link;
+                    console.log("WETRIED: Found URL in object:", url);
+                    break;
+                }
+            }
+        }
+    }
+    
+    if (!url || url.trim() === '') {
+        console.log("WETRIED: No URL found in any argument");
+        return '';
+    }
     
     try {
+        console.log("WETRIED: Using URL:", url);
+        
         // Extraire le slug de la série et le slug du chapitre depuis l'URL
-        // Format: https://wetriedtls.com/series/{series_slug}/{chapter_slug}
         const parts = url.split('/series/')[1];
         if (!parts) {
             console.log("WETRIED: Invalid URL format");
@@ -266,6 +302,7 @@ async function extractText(url) {
         return cleanedContent;
     } catch (e) {
         console.log("WETRIED extractText ERROR:", e.toString());
+        console.log("WETRIED error stack:", e.stack);
         return '';
     }
 }
